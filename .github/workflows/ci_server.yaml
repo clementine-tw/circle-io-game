@@ -11,9 +11,10 @@ jobs:
   style:
     name: Style
     runs-on: ubuntu-latest
-    run:
-      shell: bash
-      working-directory: ./server
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./server
     steps:
       - name: Check out code
         uses: actions/checkout@v4
