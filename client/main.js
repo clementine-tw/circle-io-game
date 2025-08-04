@@ -1,0 +1,110 @@
+import { getRandomInt } from "./random.js";
+import { Circle } from "./circle.js";
+import { Player } from "./player.js";
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const controlledPlayer = new Player(new Circle(20, 20));
+const otherPlayers = new Map();
+
+function renderScreen() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  controlledPlayer.render(ctx);
+  for (const [_, player] of otherPlayers) {
+    player.render(ctx);
+  }
+}
+
+function updateState() {
+  controll(controlledPlayer.circle);
+}
+
+class Input {
+  contructor() {
+    this.w = false;
+    this.s = false;
+    this.a = false;
+    this.d = false;
+  }
+
+  isMoving() {
+    return this.w || this.s || this.a || this.d;
+  }
+}
+
+const input = new Input();
+
+function controll(target) {
+  if (input.w) target.coord.y--;
+  if (input.s) target.coord.y++;
+  if (input.a) target.coord.x--;
+  if (input.d) target.coord.x++;
+}
+
+document.addEventListener("keydown", function (event) {
+  if (event.key == "w") input.w = true;
+  if (event.key == "s") input.s = true;
+  if (event.key == "a") input.a = true;
+  if (event.key == "d") input.d = true;
+});
+
+document.addEventListener("keyup", function (event) {
+  if (event.key == "w") input.w = false;
+  if (event.key == "s") input.s = false;
+  if (event.key == "a") input.a = false;
+  if (event.key == "d") input.d = false;
+});
+
+function update() {
+  updateState();
+  renderScreen();
+  requestAnimationFrame(update);
+}
+
+requestAnimationFrame(update);
+
+function handleClickStart() {
+  startButton.disabled = true;
+
+  const uuid = crypto.randomUUID();
+  const socket = new WebSocket("ws://localhost:8080?token=" + uuid);
+
+  socket.onopen = function () {
+    console.log("websocket opened");
+  };
+  socket.onclose = function (e) {
+    console.log("websocket closed: " + e.code);
+    clearInterval(sendMsgId);
+    startButton.disabled = false;
+  };
+  socket.onmessage = function (e) {
+    const data = JSON.parse(e.data);
+
+    if (data.id == uuid) return;
+
+    console.log("recieved message: " + e.data);
+
+    if (!otherPlayers.has(data.id)) {
+      otherPlayers.set(
+        data.id,
+        new Player(
+          new Circle(data.coord.x, data.coord.y),
+          `rgb(${getRandomInt(0, 255)},${getRandomInt(0, 255)},${getRandomInt(0, 255)})`,
+        ),
+      );
+      return;
+    }
+
+    otherPlayers.get(data.id).circle.coord = data.coord;
+  };
+
+  const sendMsgId = setInterval(() => {
+    if (socket && socket.readyState === WebSocket.OPEN && input.isMoving()) {
+      socket.send(JSON.stringify(controlledPlayer.circle));
+    }
+  }, 50);
+}
+
+const startButton = document.getElementById("button-start");
+startButton.addEventListener("click", handleClickStart);
