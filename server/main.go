@@ -6,9 +6,17 @@ import (
 
 	"golang.org/x/net/websocket"
 	"log"
+	"os"
 )
 
+const defaultPort = "8080"
+
 func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		log.Printf("Env 'PORT' is not set, use default: %q", defaultPort)
+		port = defaultPort
+	}
 
 	mux := http.NewServeMux()
 
@@ -16,7 +24,6 @@ func main() {
 	go game.Start()
 	mux.Handle("/", websocket.Handler(game.ServeWS))
 
-	const port = "8080"
 	srv := &http.Server{
 		Addr:         ":" + port,
 		Handler:      mux,

@@ -58,7 +58,6 @@ func (g *Game) Start() {
 	for {
 		select {
 		case msg := <-g.Update:
-			log.Printf("Received: %+v", msg)
 			player := msg.Player
 			player.Coord = msg.Coord
 			minX := player.Coord.X - player.Radius
@@ -144,7 +143,6 @@ func (g *Game) ServeWS(ws *websocket.Conn) {
 }
 
 func (g *Game) initFoods() {
-	log.Print("init foods")
 	minX := randomFoodBiasis
 	maxX := mapWidth - randomFoodBiasis
 	minY := randomFoodBiasis
