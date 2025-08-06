@@ -19,7 +19,7 @@ const (
 
 type Game struct {
 	Players    map[string]*Player
-	Foods      map[string]struct{}
+	Foods      map[string]Coord
 	Update     chan UpdateMessage
 	Register   chan *Player
 	Unregister chan *Player
@@ -36,15 +36,16 @@ type UpdateMessage struct {
 }
 
 type BroadcastMessage struct {
-	ID     string `json:"id"`
-	Radius int    `json:"radius"`
-	Coord  Coord  `json:"coord"`
+	ID     string  `json:"id"`
+	Radius int     `json:"radius"`
+	Coord  Coord   `json:"coord"`
+	Foods  []Coord `json:"foods"`
 }
 
 func NewGame() *Game {
 	return &Game{
 		Players:    make(map[string]*Player),
-		Foods:      make(map[string]struct{}),
+		Foods:      make(map[string]Coord),
 		Update:     make(chan UpdateMessage),
 		Register:   make(chan *Player),
 		Unregister: make(chan *Player),
@@ -73,11 +74,16 @@ func (g *Game) Start() {
 					}
 				}
 			}
+			foods := make([]Coord, 0, len(g.Foods))
+			for _, v := range g.Foods {
+				foods = append(foods, v)
+			}
 			for _, other := range g.Players {
 				err := websocket.JSON.Send(other.Conn, BroadcastMessage{
 					ID:     player.ID,
 					Radius: player.Radius,
 					Coord:  player.Coord,
+					Foods:  foods,
 				})
 				if err != nil {
 					log.Printf("Send the positions of other player to new user error: %v", err)
@@ -95,6 +101,17 @@ func (g *Game) Start() {
 					log.Printf("Send the positions of other player to new user error: %v", err)
 					break
 				}
+			}
+			foods := make([]Coord, 0, len(g.Foods))
+			for _, v := range g.Foods {
+				foods = append(foods, v)
+			}
+			err := websocket.JSON.Send(player.Conn, BroadcastMessage{
+				Foods: foods,
+			})
+			if err != nil {
+				log.Printf("Send foods info failed: %v", err)
+				break
 			}
 			log.Printf("%q joined", player.ID)
 			g.Players[player.ID] = player
@@ -135,7 +152,7 @@ func (g *Game) initFoods() {
 	for len(g.Foods) < maxFoods {
 		x := rand.Intn(maxX) + minX
 		y := rand.Intn(maxY) + minY
-		g.Foods[getGridKey(x, y)] = struct{}{}
+		g.Foods[getGridKey(x, y)] = Coord{X: x, Y: y}
 	}
 
 }
