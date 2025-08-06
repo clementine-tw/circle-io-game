@@ -89,6 +89,8 @@ function handleClickStart() {
 
   socket.onopen = function () {
     console.log("websocket opened");
+    // send the player position to server while player first joins the game
+    socket.send(JSON.stringify(controlledPlayer.circle));
   };
   socket.onclose = function (e) {
     console.log("websocket closed: " + e.code);
