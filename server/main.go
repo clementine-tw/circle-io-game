@@ -4,18 +4,17 @@ import (
 	"net/http"
 	"time"
 
+	"golang.org/x/net/websocket"
 	"log"
-
-	"github.com/clementine-tw/circle-io-game/server/internal/websocket"
 )
 
 func main() {
 
 	mux := http.NewServeMux()
 
-	pool := websocket.NewPool()
-	go pool.Start()
-	mux.Handle("/", websocket.Handler(pool.ServeWS))
+	game := NewGame()
+	go game.Start()
+	mux.Handle("/", websocket.Handler(game.ServeWS))
 
 	const port = "8080"
 	srv := &http.Server{

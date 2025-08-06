@@ -22,7 +22,7 @@ canvas.height = height * dpr;
 // draw size
 ctx.scale(dpr, dpr);
 
-const controlledPlayer = new Player(new Circle(20, 20));
+const controlledPlayer = new Player(new Circle(20, 20, 10));
 const otherPlayers = new Map();
 
 function renderScreen() {
@@ -100,22 +100,26 @@ function handleClickStart() {
   socket.onmessage = function (e) {
     const data = JSON.parse(e.data);
 
-    if (data.id == uuid) return;
-
     console.log("recieved message: " + e.data);
+    if (data.id == uuid) {
+      controlledPlayer.circle.radius = data.radius;
+      return;
+    }
 
     if (!otherPlayers.has(data.id)) {
       otherPlayers.set(
         data.id,
         new Player(
-          new Circle(data.coord.x, data.coord.y),
+          new Circle(data.coord.x, data.coord.y, data.radius),
           `rgb(${getRandomInt(0, 255)},${getRandomInt(0, 255)},${getRandomInt(0, 255)})`,
         ),
       );
       return;
     }
 
-    otherPlayers.get(data.id).circle.coord = data.coord;
+    let c = otherPlayers.get(data.id).circle;
+    c.coord = data.coord;
+    c.radius = data.radius;
   };
 
   let { x: lx, y: ly } = controlledPlayer.circle.coord;
@@ -126,8 +130,8 @@ function handleClickStart() {
       socket.readyState === WebSocket.OPEN &&
       (cx != lx || cy != ly)
     ) {
-      lx = controlledPlayer.circle.x;
-      ly = controlledPlayer.circle.y;
+      lx = controlledPlayer.circle.coord.x;
+      ly = controlledPlayer.circle.coord.y;
       socket.send(JSON.stringify(controlledPlayer.circle));
     }
   }, 50);
