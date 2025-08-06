@@ -29,6 +29,16 @@ func (p *Pool) Start() {
 		select {
 		case client := <-p.Register:
 			log.Printf("New client %q joined", client.ID)
+			for other := range p.Clients {
+				err := websocket.JSON.Send(client.Conn, SendMessage{
+					ID:             other.ID,
+					ReceiveMessage: ReceiveMessage{Coord: other.Coord},
+				})
+				if err != nil {
+					log.Printf("Send the positions of other player to new user error: %v", err)
+					break
+				}
+			}
 			p.Clients[client] = struct{}{}
 		case client := <-p.Unregister:
 			log.Printf("Client %q left", client.ID)

@@ -10,6 +10,7 @@ type Client struct {
 	ID   string
 	Conn *websocket.Conn
 	Pool *Pool
+	Coord
 }
 
 func (c *Client) Read() {
@@ -26,6 +27,7 @@ func (c *Client) Read() {
 			break
 		}
 		log.Printf("Received message: %+v\n", msg)
+		c.Coord = msg.Coord
 		c.Pool.Broadcast <- SendMessage{
 			ID:             c.ID,
 			ReceiveMessage: msg,
