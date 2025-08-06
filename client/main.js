@@ -118,8 +118,16 @@ function handleClickStart() {
     otherPlayers.get(data.id).circle.coord = data.coord;
   };
 
+  let { x: lx, y: ly } = controlledPlayer.circle.coord;
   const sendMsgId = setInterval(() => {
-    if (socket && socket.readyState === WebSocket.OPEN && input.isMoving()) {
+    let { x: cx, y: cy } = controlledPlayer.circle.coord;
+    if (
+      socket &&
+      socket.readyState === WebSocket.OPEN &&
+      (cx != lx || cy != ly)
+    ) {
+      lx = controlledPlayer.circle.x;
+      ly = controlledPlayer.circle.y;
       socket.send(JSON.stringify(controlledPlayer.circle));
     }
   }, 50);
