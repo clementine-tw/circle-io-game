@@ -1,6 +1,7 @@
 import { getRandomInt } from "./random.js";
 import { Circle } from "./circle.js";
 import { Player } from "./player.js";
+import { Food } from "./food.js";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -24,12 +25,16 @@ ctx.scale(dpr, dpr);
 
 const controlledPlayer = new Player(new Circle(20, 20, 10));
 const otherPlayers = new Map();
+let foods = [];
 
 function renderScreen() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   controlledPlayer.render(ctx);
   for (const [_, player] of otherPlayers) {
     player.render(ctx);
+  }
+  for (const food of foods) {
+    food.render(ctx);
   }
 }
 
@@ -101,6 +106,13 @@ function handleClickStart() {
     const data = JSON.parse(e.data);
 
     console.log("recieved message: " + e.data);
+    if (data.foods) {
+      foods = [];
+      for (const d of data.foods) {
+        foods.push(new Food(d.x, d.y));
+      }
+    }
+
     if (data.id == uuid) {
       controlledPlayer.circle.radius = data.radius;
       return;
