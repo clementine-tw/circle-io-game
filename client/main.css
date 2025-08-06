@@ -1,0 +1,9 @@
+.center {
+  display: flex;
+  align-item: center;
+  justify-content: center;
+}
+
+.outline {
+  border: thick double #32a1ce;
+}

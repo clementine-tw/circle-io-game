@@ -5,6 +5,23 @@ import { Player } from "./player.js";
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
+// tune pixel ratio
+const screenRatio = [16, 9];
+const height = 720;
+const width = (height * screenRatio[0]) / screenRatio[1];
+
+// css presentation
+canvas.style.width = `${width}px`;
+canvas.style.height = `${height}px`;
+
+// canvas size
+const dpr = window.devicePixelRatio || 1;
+canvas.width = width * dpr;
+canvas.height = height * dpr;
+
+// draw size
+ctx.scale(dpr, dpr);
+
 const controlledPlayer = new Player(new Circle(20, 20));
 const otherPlayers = new Map();
 
